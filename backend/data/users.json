@@ -1,0 +1,59 @@
+[
+  {
+    "id": "e6519743-1d20-465c-b0c7-93668f98d9e7",
+    "name": "Jhon Wick",
+    "email": "fahrimuhammadani123@gmail.com",
+    "password": "$2b$10$u.W3S9kyyFY9TP4fAz4v3eSgzKeT0SBPd2xkh/Jd4ME5SrEAi2y2e",
+    "position": "Web Development ",
+    "role": "employee",
+    "createdAt": "2025-10-12T09:10:34.510Z",
+    "updatedAt": "2025-10-13T13:08:21.573Z"
+  },
+  {
+    "id": "e2d11522-20c8-4ee4-b394-abf8029e0599",
+    "name": "Orca Vamous",
+    "email": "riioconner1357@gmail.com",
+    "password": "$2b$10$GDgEZfEbTeCJjMxEUEF/P.gqPXxQpFN/aSq7SNsSnX093SXATU7yO",
+    "position": "CEO",
+    "role": "admin",
+    "createdAt": "2025-10-12T10:02:45.878Z"
+  },
+  {
+    "id": "e10300f9-0a56-417b-9dc7-6401a242a135",
+    "name": "RixxBLD",
+    "email": "fahri.muhammadani33@smk.belajar.id",
+    "password": "$2b$10$q.AmCMWGPh/.v3hAHRViJe7qzJtEimzTbIBfCvpAuv.CDmjdlizjm",
+    "position": "CEO",
+    "role": "admin",
+    "createdAt": "2025-10-12T10:04:24.084Z"
+  },
+  {
+    "id": "eece4d9a-e1ba-4f10-83fe-c20e62037f67",
+    "name": "Bambang Pamungkas ",
+    "email": "fahrimuhammadani0@gmail.com",
+    "password": "$2b$10$hTz0TyJdbZVd2HkFBggEFOFyDvMIHk1OS.oVeDeqtN0GZu72sf9s6",
+    "position": "IT",
+    "role": "employee",
+    "createdAt": "2025-10-12T10:37:58.701Z",
+    "updatedAt": "2025-10-13T12:43:12.630Z"
+  },
+  {
+    "id": "45b5e399-a8f5-46ef-b4bf-bb5968db5e8e",
+    "name": "Calon Karyawan",
+    "email": "calon123@gmail.com",
+    "password": "$2b$10$tvtet7ARFAWWDa4eEtPB6e7qzYFNY86WwOR45svrAHbhVKp8g4tR2",
+    "position": "Staf Penerbangan",
+    "role": "employee",
+    "createdAt": "2025-10-12T11:41:27.413Z",
+    "updatedAt": "2025-10-13T12:43:16.676Z"
+  },
+  {
+    "id": "7a6bc757-be10-45bc-8992-be234bbeb368",
+    "name": "Bayu Nugroho",
+    "email": "calon12345@gmail.com",
+    "password": "$2b$10$6379FJUPWQHercLdz/Y8SeZqhnFO/MDOP/iIdIrQiB1eEdGhjTR7O",
+    "position": "UI/UX",
+    "role": "employee",
+    "createdAt": "2025-10-13T13:58:46.795Z"
+  }
+]

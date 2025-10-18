@@ -1,0 +1,80 @@
+[
+  {
+    "id": "6972d681-cd66-4b45-898c-9ac3d3112f43",
+    "userId": "e6519743-1d20-465c-b0c7-93668f98d9e7",
+    "date": "2025-10-12",
+    "checkIn": {
+      "timestamp": "2025-10-12T10:30:41.019Z",
+      "latitude": -6.9229326,
+      "longitude": 107.6464926
+    },
+    "checkOut": null
+  },
+  {
+    "id": "8bdf7803-52a1-4723-80f8-613519df0d0c",
+    "userId": "eece4d9a-e1ba-4f10-83fe-c20e62037f67",
+    "date": "2025-10-12",
+    "checkIn": {
+      "timestamp": "2025-10-12T10:38:21.224Z",
+      "latitude": -6.923042258284763,
+      "longitude": 107.6464346483464
+    },
+    "checkOut": null
+  },
+  {
+    "id": "b8586eaa-486c-4aed-a982-135a395b16a7",
+    "userId": "45b5e399-a8f5-46ef-b4bf-bb5968db5e8e",
+    "date": "2025-10-12",
+    "checkIn": {
+      "timestamp": "2025-10-12T11:43:40.872Z",
+      "latitude": -6.923042258284763,
+      "longitude": 107.6464346483464
+    },
+    "checkOut": null
+  },
+  {
+    "id": "0fd26b5d-2a2f-42ab-b654-7675e102a3ae",
+    "userId": "eece4d9a-e1ba-4f10-83fe-c20e62037f67",
+    "date": "2025-10-13",
+    "checkIn": {
+      "timestamp": "2025-10-13T01:21:45.110Z",
+      "latitude": -6.94046048543476,
+      "longitude": 107.664177636181
+    },
+    "checkOut": {
+      "timestamp": "2025-10-13T12:41:23.083Z",
+      "latitude": -6.923037255542296,
+      "longitude": 107.64644957629353
+    }
+  },
+  {
+    "id": "f15247be-0957-45f1-939d-7aa192a3db3c",
+    "userId": "e6519743-1d20-465c-b0c7-93668f98d9e7",
+    "date": "2025-10-13",
+    "checkIn": {
+      "timestamp": "2025-10-13T01:22:08.083Z",
+      "latitude": -6.9404933116103456,
+      "longitude": 107.66414160089182
+    },
+    "checkOut": {
+      "timestamp": "2025-10-13T12:41:07.208Z",
+      "latitude": -6.923042401144614,
+      "longitude": 107.64644464068166
+    }
+  },
+  {
+    "id": "642d7fa9-1122-4540-95cb-59ba5baf1381",
+    "userId": "7a6bc757-be10-45bc-8992-be234bbeb368",
+    "date": "2025-10-13",
+    "checkIn": {
+      "timestamp": "2025-10-13T14:00:26.395Z",
+      "latitude": -6.923053673091764,
+      "longitude": 107.64644666643109
+    },
+    "checkOut": {
+      "timestamp": "2025-10-13T14:00:28.791Z",
+      "latitude": -6.923053673091764,
+      "longitude": 107.64644666643109
+    }
+  }
+]

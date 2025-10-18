@@ -1,0 +1,28 @@
+{
+  "officeLocation": {
+    "latitude": -6.92303975970728,
+    "longitude": 107.64643795084187,
+    "radius": 100,
+    "address": "Bandung, Jawa Barat, Indonesia",
+    "updatedAt": "2025-10-13T12:40:54.446Z"
+  },
+  "general": {
+    "companyName": "PT. Perusahaan Contoh",
+    "workingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "attendanceRules": {
+      "maxCheckInTime": "10:00",
+      "minWorkingHours": 8,
+      "allowRemote": false
+    },
+    "updatedAt": "2025-10-12T09:09:48.832Z"
+  },
+  "companyName": "PT. Bandung Stars",
+  "workingHours": {
+    "start": "07:00",
+    "end": "15:00"
+  },
+  "updatedAt": "2025-10-13T01:21:10.139Z"
+}

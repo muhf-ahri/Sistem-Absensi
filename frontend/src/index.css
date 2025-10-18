@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Leaflet CSS */
+@import '~leaflet/dist/leaflet.css';
+
+.leaflet-container {
+  height: 400px;
+  width: 100%;
+  border-radius: 0.75rem;
+}

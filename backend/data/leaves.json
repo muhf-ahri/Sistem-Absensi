@@ -1,0 +1,26 @@
+[
+  {
+    "id": "156d6316-c008-4849-a54d-d5557963b418",
+    "userId": "eece4d9a-e1ba-4f10-83fe-c20e62037f67",
+    "startDate": "2025-10-12",
+    "endDate": "2025-10-13",
+    "reason": "Saya izin sakit bos mohon pengertiannya ",
+    "type": "sakit",
+    "status": "approved",
+    "appliedAt": "2025-10-12T10:40:51.223Z",
+    "processedAt": "2025-10-13T14:13:18.615Z",
+    "processedBy": "admin"
+  },
+  {
+    "id": "2cb344b8-ddcb-40d6-9392-60b0304069d0",
+    "userId": "e6519743-1d20-465c-b0c7-93668f98d9e7",
+    "startDate": "2025-10-16",
+    "endDate": "2025-10-17",
+    "reason": "Keluarga dekat saya sedang mengadakan acara syukuran",
+    "type": "keluarga",
+    "status": "approved",
+    "appliedAt": "2025-10-13T14:14:22.672Z",
+    "processedAt": "2025-10-13T14:15:03.306Z",
+    "processedBy": "admin"
+  }
+]
