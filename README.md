@@ -25,6 +25,7 @@
 - [🚀 Instalasi & Setup](#-instalasi--setup)
 - [🎯 Cara Penggunaan](#-cara-penggunaan)
 - [📡 API Endpoints](#-api-endpoints)
+- [📁 Struktur Project](#-struktur-project)
 - [🔧 Environment Variables](#-environment-variables)
 - [📞 Contact](#-contact)
 - [🙏 Acknowledgments](#-acknowledgments)
@@ -264,6 +265,7 @@ Sistem-Absensi/
 │   │   │   ├── common/    # Shared components
 │   │   │   └── employee/  # Employee components
 │   │   ├── context/    # React context
+│   │   ├── hooks/    # Hooks
 │   │   ├── pages/      # Page components
 │   │   ├── utils/      # Utility functions
 │   │   └── App.jsx     # Main app component
