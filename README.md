@@ -24,14 +24,10 @@
 - [✨ Fitur Utama](#-fitur-utama)
 - [🚀 Instalasi & Setup](#-instalasi--setup)
 - [🎯 Cara Penggunaan](#-cara-penggunaan)
-- [📡 API Documentation](#-api-documentation)
-- [🏗️ Arsitektur Sistem](#️-arsitektur-sistem)
+- [📡 API Endpoints](#-api-endpoints)
+- [📁 Struktur Project](#-struktur-project)
 - [🔧 Environment Variables](#-environment-variables)
-- [🚀 Deployment](#-deployment)
-- [🧪 Testing](#-testing)
-- [🔍 Troubleshooting](#-troubleshooting)
 - [📞 Contact](#-contact)
-- [🙏 Acknowledgments](#-acknowledgments)
 
 ---
 
@@ -268,6 +264,7 @@ Sistem-Absensi/
 │   │   │   ├── common/    # Shared components
 │   │   │   └── employee/  # Employee components
 │   │   ├── context/    # React context
+│   │   ├── hooks/    # Hooks
 │   │   ├── pages/      # Page components
 │   │   ├── utils/      # Utility functions
 │   │   └── App.jsx     # Main app component
@@ -303,6 +300,7 @@ JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
 
 ## 📞 Contact
 
+-**Phone**: +62 821-3064-1298
 - **Developer**: Fahri Muhammadani
 - **Email**: fahrimuhammadani123@gmail.com
 - **Project Link**: [[Repository URL](https://github.com/muhf-ahri/Sistem-Absensi.git)]
