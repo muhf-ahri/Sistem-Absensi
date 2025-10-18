@@ -214,7 +214,7 @@ Frontend akan berjalan di `http://localhost:5173`
 
 1. **Admin** login dan mengelola karyawan serta pengaturan
 2. **Karyawan** login dan melakukan check-in/check-out
-3. Sistem validasi lokasi otomatis berdasarkan radius kantor
+3. Sistem validasi lokasi otomatis berdasarkan radius kantor dan verifikasi wajah
 4. Admin dapat melihat laporan dan approve cuti
 
 ## 📡 API Endpoints
