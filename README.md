@@ -300,7 +300,7 @@ JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
 
 ## 📞 Contact
 
--**Phone**: +62 821-3064-1298
+- **Phone**: +62 821-3064-1298
 - **Developer**: Fahri Muhammadani
 - **Email**: fahrimuhammadani123@gmail.com
 - **Project Link**: [[Repository URL](https://github.com/muhf-ahri/Sistem-Absensi.git)]
