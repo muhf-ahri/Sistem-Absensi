@@ -4,6 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.18.2-lightgrey.svg)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.19.1-green.svg)](https://www.mongodb.com/)
+[![Mongoose](https://img.shields.io/badge/Mongoose-8.19.1-blue.svg)](https://mongoosejs.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.18-38B2AC.svg)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -18,9 +19,6 @@
 
 ## 📋 Table of Contents
 - [✨ Fitur Utama](#-fitur-utama)
-- [🎯 Demo](#-demo)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [📋 Prerequisites](#-prerequisites)
 - [🚀 Instalasi & Setup](#-instalasi--setup)
 - [🎯 Cara Penggunaan](#-cara-penggunaan)
 - [📡 API Documentation](#-api-documentation)
@@ -29,8 +27,6 @@
 - [🚀 Deployment](#-deployment)
 - [🧪 Testing](#-testing)
 - [🔍 Troubleshooting](#-troubleshooting)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
 - [📞 Contact](#-contact)
 - [🙏 Acknowledgments](#-acknowledgments)
 
@@ -63,36 +59,106 @@ Sebelum menjalankan project ini, pastikan Anda memiliki:
 
 - 🟢 **Node.js** versi 18 atau lebih tinggi
 - 📦 **npm** atau **yarn** package manager
+- 🍃 **MongoDB** versi 7.0 atau lebih tinggi (Community Edition)
 - 🌐 **Browser modern** (Chrome, Firefox, Safari, Edge)
 
 ## 🚀 Instalasi & Setup
 
 ### 1. Clone Repository
 ```bash
-git clone <repository-url>
+git clone < https://github.com/muhf-ahri/Sistem-Absensi.git >
 cd Sistem-Absensi
 ```
 
-### 2. Setup Backend
+### 2. Buat Database
+Kunjungi Website [[MongoDB] (https://www.mongodb.com/cloud/atlas)]
+1. Daftar Akun dan isi format
+  - Email - gunakan email aktif
+  - First Name & Last Name
+  - Password - minimal 8 karakter
+  - Verifikasi email Anda melalui link yang dikirim
+
+2. Membuat Cluster
+    - Pilih Tier Cluster 
+    - Lalu Create
+  - Konfigurasi Provider
+  ```
+  Provider: AWS / Google Cloud / Azure
+  Region: ap-southeast-1 (Singapore) # Recommended untuk Indonesia
+  Cluster Name: myFirstCluster
+  ```
+  - Addtional Settings
+    - Cluster Tier: M0 Sandbox (FREE)
+    - Additional Settings: Default
+    - Klik "Create Cluster"
+
+3. Setup Security & Network Access
+  - Buat database User
+    - Navigasi ke Security → Database Access
+    - Klik "Add New Database User"
+    ```
+    Authentication Method: Password
+    Username: adminUser
+    Password: [Buat password kuat]
+    Database User Privileges: Read and write to any database
+    ```
+    - Klik "Add User"
+  - Konfigurasi Network Access
+    - Navigasi ke Security → Network Access
+    - Klik "Add IP Address"
+    ```
+    Access List Entry: 0.0.0.0/0
+    Comment: Development Access
+    ```
+    - Klik "Confirm"
+    ⚠️ Security Note: 0.0.0.0/0 membolehkan akses dari IP mana saja. Untuk production, gunakan IP specific.
+4. Mendapatkan Connection String
+  - Koneksi ke Cluster
+    - Kembali ke Clusters
+    - Klik tombol "Connect" pada cluster Anda
+
+  - Pilih Connection Method
+    - Pilih "Connect your application"
+
+  - Copy Connection String
+  ```mongodb
+  mongodb+srv://adminUser:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+  ```
+5. Koneksi dengan Aplikasi
+  - Install dependencies
+  ```bash
+  npm install mongoose dotenv
+  ```
+
+### 3. Setup Environment Variables
+Buat file `.env` di folder `backend/`:
+```env
+MONGODB_URI=mongodb://localhost:27017/absensi-karyawan
+PORT=9999
+NODE_ENV=development
+JWT_SECRET=your-super-secret-jwt-key-here
+```
+
+### 4. Setup Backend
 ```bash
 cd backend
 npm install
 ```
 
-### 3. Setup Frontend
+### 5. Setup Frontend
 ```bash
 cd frontend
 npm install
 ```
 
-### 4. Jalankan Backend
+### 6. Jalankan Backend
 ```bash
 cd backend
 node server.js
 ```
-Server akan berjalan di `http://localhost:5000`
+Server akan berjalan di `http://localhost:9999`
 
-### 5. Jalankan Frontend
+### 7. Jalankan Frontend
 ```bash
 cd frontend
 npm run dev
@@ -142,8 +208,10 @@ Frontend akan berjalan di `http://localhost:5173`
 ```
 Sistem-Absensi/
 ├── backend/
-│   ├── data/           # JSON data files
+│   ├── config/         # Database configuration
+│   ├── models/         # Mongoose models
 │   ├── routes/         # API route handlers
+│   ├── .env            # Environment variables (create this file)
 │   ├── server.js       # Main server file
 │   └── package.json
 ├── frontend/
@@ -162,25 +230,37 @@ Sistem-Absensi/
 └── README.md
 ```
 
-## 🤝 Contributing
+## 🔧 Environment Variables
 
-Kontribusi sangat diterima! Silakan ikuti langkah berikut:
+Untuk menjalankan aplikasi ini, Anda perlu mengatur beberapa environment variables. Buat file `.env` di folder `backend/` dan isi dengan:
 
-1. Fork project ini
-2. Buat branch fitur baru (`git checkout -b feature/AmazingFeature`)
-3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
-4. Push ke branch (`git push origin feature/AmazingFeature`)
-5. Buat Pull Request
+```.env
+# Database Configuration
+MONGODB_URI=mongodb+srv://user_anda:password@cluster0.qbd5ra6.mongodb.net/?retryWrites=true&w=majority
 
-## 📄 License
+# Server Configuration
+PORT=9999
+NODE_ENV=development
 
-Distributed under the MIT License. See `LICENSE` for more information.
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
+
+# Optional: CORS Origins (untuk production)
+# ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app,https://your-app.herokuapp.com
+```
+
+### Penjelasan Environment Variables:
+
+- `MONGODB_URI`: Connection string untuk MongoDB database
+- `PORT`: Port server backend (default: 9999)
+- `NODE_ENV`: Environment mode (development/production)
+- `JWT_SECRET`: Secret key untuk JWT token authentication
 
 ## 📞 Contact
 
 - **Developer**: Fahri Muhammadani
 - **Email**: fahrimuhammadani123@gmail.com
-- **Project Link**: [[Repository URL](https://github.com/muhf-ahri/Web-Absensi3.git)]
+- **Project Link**: [[Repository URL](https://github.com/muhf-ahri/Sistem-Absensi.git)]
 
 ---
 
