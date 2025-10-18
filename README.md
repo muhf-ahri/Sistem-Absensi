@@ -130,7 +130,8 @@ Kunjungi Website MongoDB (https://www.mongodb.com/cloud/atlas)
   Comment: Development Access
   ```
   - Klik "Confirm"
-    ⚠️ Security Note: 0.0.0.0/0 membolehkan akses dari IP mana saja. Untuk production, gunakan IP specific.
+  
+  ⚠️ Security Note: 0.0.0.0/0 membolehkan akses dari IP mana saja. Untuk production, gunakan IP specific.
 
 4. Mendapatkan Connection String
 
