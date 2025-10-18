@@ -1,3 +1,5 @@
+// File: src/pages/Attendance/AttendanceHistory.jsx (atau sesuaikan path-nya)
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/API';
@@ -51,6 +53,18 @@ const AttendanceHistory = () => {
     return { text: 'Lengkap', color: 'text-green-600', bg: 'bg-green-100' };
   };
 
+  // Fungsi bantuan untuk memformat koordinat
+  const formatCoordinates = (lat, lng) => {
+    if (lat === undefined || lng === undefined || lat === null || lng === null) {
+      return '-';
+    }
+    // Cek apakah nilai adalah angka sebelum memanggil toFixed
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+      return '-';
+    }
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  };
+
   const exportToCSV = () => {
     const headers = ['Tanggal', 'Check-in', 'Check-out', 'Status', 'Lokasi Check-in', 'Lokasi Check-out'];
     const csvData = attendance.map(record => [
@@ -58,8 +72,8 @@ const AttendanceHistory = () => {
       record.checkIn ? new Date(record.checkIn.timestamp).toLocaleTimeString() : '-',
       record.checkOut ? new Date(record.checkOut.timestamp).toLocaleTimeString() : '-',
       getStatus(record).text,
-      record.checkIn && record.checkIn.latitude !== undefined && record.checkIn.longitude !== undefined ? `${record.checkIn.latitude.toFixed(4)}, ${record.checkIn.longitude.toFixed(4)}` : '-',
-      record.checkOut && record.checkOut.latitude !== undefined && record.checkOut.longitude !== undefined ? `${record.checkOut.latitude.toFixed(4)}, ${record.checkOut.longitude.toFixed(4)}` : '-'
+      record.checkIn ? formatCoordinates(record.checkIn.latitude, record.checkIn.longitude) : '-',
+      record.checkOut ? formatCoordinates(record.checkOut.latitude, record.checkOut.longitude) : '-'
     ]);
 
     const csvContent = [
@@ -258,11 +272,11 @@ const AttendanceHistory = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {record.checkIn && record.checkIn.latitude !== undefined && record.checkIn.longitude !== undefined ? (
+                        {record.checkIn ? (
                           <div>
-                            <div>Check-in: {record.checkIn.latitude.toFixed(4)}, {record.checkIn.longitude.toFixed(4)}</div>
-                            {record.checkOut && record.checkOut.latitude !== undefined && record.checkOut.longitude !== undefined && (
-                              <div>Check-out: {record.checkOut.latitude.toFixed(4)}, {record.checkOut.longitude.toFixed(4)}</div>
+                            <div>Check-in: {formatCoordinates(record.checkIn.latitude, record.checkIn.longitude)}</div>
+                            {record.checkOut && (
+                              <div>Check-out: {formatCoordinates(record.checkOut.latitude, record.checkOut.longitude)}</div>
                             )}
                           </div>
                         ) : (

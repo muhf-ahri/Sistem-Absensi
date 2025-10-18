@@ -5,6 +5,11 @@
 /* Leaflet CSS */
 @import '~leaflet/dist/leaflet.css';
 
+.backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
 .leaflet-container {
   height: 400px;
   width: 100%;

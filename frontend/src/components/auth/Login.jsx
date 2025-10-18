@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSweetAlert } from '../../hooks/useSweetAlert';
 import { Building2, Mail, Lock, AlertCircle } from 'lucide-react';
 
 const Login = () => {
@@ -13,29 +14,101 @@ const Login = () => {
   
   const { login } = useAuth();
   const navigate = useNavigate();
+  
+  // Gunakan custom hook SweetAlert
+  const {
+    successToast,
+    errorToast,
+    loading: showLoadingAlert,
+    close: closeAlert
+  } = useSweetAlert();
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
+  };
+
+  const validateForm = () => {
+    if (!formData.email.trim()) {
+      errorToast('Email harus diisi');
+      return false;
+    }
+
+    if (!formData.password) {
+      errorToast('Password harus diisi');
+      return false;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      errorToast('Format email tidak valid');
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
-    const result = await login(formData.email, formData.password);
-    
-    if (result.success) {
-      const user = JSON.parse(localStorage.getItem('user'));
-      navigate(`/${user.role}`);
-    } else {
-      setError(result.error);
+    // Validate form
+    if (!validateForm()) {
+      return;
     }
-    
-    setLoading(false);
+
+    setLoading(true);
+    const loadingAlert = showLoadingAlert('Memproses login...');
+
+    try {
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        const user = JSON.parse(localStorage.getItem('user'));
+        closeAlert();
+        
+        // Show success message based on role
+        const roleName = user.role === 'admin' ? 'Administrator' : 
+                        user.role === 'hr' ? 'HR' : 'Karyawan';
+        
+        successToast(`Selamat datang, ${user.name || roleName}!`, 3000);
+        
+        // Navigate after a short delay to show the success message
+        setTimeout(() => {
+          navigate(`/${user.role}`);
+        }, 1500);
+      } else {
+        closeAlert();
+        
+        // Show specific error messages
+        let errorMessage = 'Login gagal';
+        if (result.error?.includes('invalid') || result.error?.includes('credentials')) {
+          errorMessage = 'Email atau password salah';
+        } else if (result.error?.includes('network') || result.error?.includes('connection')) {
+          errorMessage = 'Koneksi jaringan bermasalah. Silakan coba lagi.';
+        } else if (result.error?.includes('timeout')) {
+          errorMessage = 'Waktu login habis. Silakan coba lagi.';
+        } else {
+          errorMessage = result.error || 'Terjadi kesalahan saat login';
+        }
+        
+        setError(errorMessage);
+        errorToast(errorMessage);
+      }
+    } catch (error) {
+      closeAlert();
+      const errorMessage = 'Terjadi kesalahan tak terduga. Silakan coba lagi.';
+      setError(errorMessage);
+      errorToast(errorMessage);
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,11 +127,14 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
+          <div className="rounded-md bg-red-50 p-4 border border-red-200">
             <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-400" />
+              <AlertCircle className="h-5 w-5 text-red-400 mt-0.5" />
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                <p className="text-sm text-red-600 mt-1">
+                  Periksa kembali email dan password Anda
+                </p>
               </div>
             </div>
           </div>
@@ -81,8 +157,9 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="masukkan email"
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -102,35 +179,55 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="masukkan password"
+                  disabled={loading}
                 />
               </div>
             </div>
           </div>
 
-          <div>
+          <div className="space-y-4">
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
-              {loading ? 'Memproses...' : 'Masuk'}
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Memproses...</span>
+                </div>
+              ) : (
+                'Masuk ke Sistem'
+              )}
             </button>
-          </div>
 
-          <div className="text-center">
-            <span className="text-sm text-gray-600">
-              Belum punya akun?{' '}
-              <Link
-                to="/register"
-                className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-              >
-                Daftar di sini
-              </Link>
-            </span>
+            <div className="text-center">
+              <span className="text-sm text-gray-600">
+                Belum punya akun?{' '}
+                <Link
+                  to="/register"
+                  className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                >
+                  Daftar di sini
+                </Link>
+              </span>
+            </div>
           </div>
         </form>
+
+        {/* Additional Info */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="text-center">
+            <p className="text-xs text-gray-500">
+              © 2024 Sistem Absensi Karyawan. All rights reserved.
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Versi 1.0.0
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/API';
+import { useSweetAlert } from '../../hooks/useSweetAlert';
 import { Calendar, FileText, Plus, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 const LeaveRequest = () => {
@@ -20,6 +21,17 @@ const LeaveRequest = () => {
     rejected: 0
   });
   const { user } = useAuth();
+  
+  // Gunakan custom hook SweetAlert
+  const {
+    successToast,
+    errorToast,
+    confirmation,
+    successDialog,
+    errorDialog,
+    loading: showLoadingAlert,
+    close: closeAlert
+  } = useSweetAlert();
 
   useEffect(() => {
     loadLeaves();
@@ -32,6 +44,7 @@ const LeaveRequest = () => {
       setLeaves(response.data);
     } catch (error) {
       console.error('Error loading leaves:', error);
+      errorToast('Gagal memuat data pengajuan cuti');
     } finally {
       setLoading(false);
     }
@@ -43,11 +56,46 @@ const LeaveRequest = () => {
       setStats(response.data);
     } catch (error) {
       console.error('Error loading stats:', error);
+      errorToast('Gagal memuat statistik cuti');
     }
+  };
+
+  const validateForm = () => {
+    const startDate = new Date(formData.startDate);
+    const endDate = new Date(formData.endDate);
+    
+    if (endDate < startDate) {
+      errorToast('Tanggal selesai tidak boleh sebelum tanggal mulai');
+      return false;
+    }
+    
+    if (formData.reason.trim().length < 10) {
+      errorToast('Alasan cuti minimal 10 karakter');
+      return false;
+    }
+    
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    const confirmationResult = await confirmation(
+      'Ajukan Cuti',
+      `Apakah Anda yakin ingin mengajukan cuti ${formData.type} dari ${formData.startDate} hingga ${formData.endDate}?`,
+      'Ya, Ajukan'
+    );
+
+    if (!confirmationResult.isConfirmed) {
+      return;
+    }
+
+    const loadingAlert = showLoadingAlert('Mengajukan cuti...');
+    
     try {
       await api.post('/leaves/apply', {
         userId: user.id,
@@ -65,9 +113,43 @@ const LeaveRequest = () => {
       await loadLeaves();
       await loadStats();
       
-      alert('Pengajuan cuti berhasil dikirim!');
+      closeAlert();
+      
+      successDialog(
+        'Pengajuan Berhasil!', 
+        'Pengajuan cuti Anda telah berhasil dikirim dan sedang menunggu persetujuan.'
+      );
     } catch (error) {
-      alert('Gagal mengajukan cuti: ' + (error.response?.data?.error || 'Server error'));
+      closeAlert();
+      const errorMessage = error.response?.data?.error || 'Terjadi kesalahan server';
+      
+      errorDialog(
+        'Pengajuan Gagal',
+        errorMessage
+      );
+    }
+  };
+
+  const handleCancelForm = async () => {
+    if (formData.startDate || formData.endDate || formData.reason) {
+      const result = await confirmation(
+        'Batalkan Pengajuan',
+        'Data yang sudah diisi akan hilang. Apakah Anda yakin ingin membatalkan?',
+        'Ya, Batalkan'
+      );
+      
+      if (result.isConfirmed) {
+        setShowForm(false);
+        setFormData({
+          startDate: '',
+          endDate: '',
+          reason: '',
+          type: 'cuti'
+        });
+        successToast('Pengajuan dibatalkan', 2000);
+      }
+    } else {
+      setShowForm(false);
     }
   };
 
@@ -101,6 +183,21 @@ const LeaveRequest = () => {
         return 'Ditolak';
       default:
         return 'Menunggu';
+    }
+  };
+
+  const getTypeText = (type) => {
+    switch (type) {
+      case 'cuti':
+        return 'Cuti Tahunan';
+      case 'sakit':
+        return 'Sakit';
+      case 'keluarga':
+        return 'Keluarga';
+      case 'lainnya':
+        return 'Lainnya';
+      default:
+        return type;
     }
   };
 
@@ -200,6 +297,7 @@ const LeaveRequest = () => {
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
 
@@ -213,6 +311,7 @@ const LeaveRequest = () => {
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
+                  min={formData.startDate || new Date().toISOString().split('T')[0]}
                 />
               </div>
 
@@ -228,12 +327,13 @@ const LeaveRequest = () => {
                   placeholder="Jelaskan alasan pengajuan cuti..."
                   required
                 ></textarea>
+                <p className="text-xs text-gray-500 mt-1">Minimal 10 karakter</p>
               </div>
 
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={handleCancelForm}
                   className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
                 >
                   Batal
@@ -278,7 +378,7 @@ const LeaveRequest = () => {
                         {new Date(leave.startDate).toLocaleDateString('id-ID')} - {new Date(leave.endDate).toLocaleDateString('id-ID')}
                       </span>
                     </div>
-                    <h4 className="font-medium text-gray-900 capitalize">{leave.type}</h4>
+                    <h4 className="font-medium text-gray-900">{getTypeText(leave.type)}</h4>
                     <p className="text-gray-600 mt-1">{leave.reason}</p>
                     <p className="text-sm text-gray-500 mt-2">
                       Diajukan pada {new Date(leave.appliedAt).toLocaleDateString('id-ID', {

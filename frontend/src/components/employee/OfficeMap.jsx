@@ -1,3 +1,5 @@
+// File: src/pages/OfficeMap/OfficeMap.jsx (atau sesuaikan path-nya)
+
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import { api } from '../../utils/API';
@@ -8,15 +10,15 @@ import L from 'leaflet';
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png', // [Perbaikan: Hapus spasi]
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',         // [Perbaikan: Hapus spasi]
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',    // [Perbaikan: Hapus spasi]
 });
 
 // Custom icons
 const officeIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png', // [Perbaikan: Hapus spasi]
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png', // [Perbaikan: Hapus spasi]
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -24,8 +26,8 @@ const officeIcon = new L.Icon({
 });
 
 const userIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', // [Perbaikan: Hapus spasi]
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png', // [Perbaikan: Hapus spasi]
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -33,7 +35,7 @@ const userIcon = new L.Icon({
 });
 
 // Component to center map when office location changes
-const MapController = ({ center, radius }) => {
+const MapController = ({ center }) => {
   const map = useMap();
   
   useEffect(() => {
@@ -53,12 +55,26 @@ const OfficeMap = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [mapKey, setMapKey] = useState(0); // Key untuk force re-render map
+  const [mapKey, setMapKey] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     loadOfficeLocation();
     getUserLocation();
+    checkMobileDevice();
+
+    // Setup resize listener
+    window.addEventListener('resize', checkMobileDevice);
+    return () => {
+      window.removeEventListener('resize', checkMobileDevice);
+    };
   }, []);
+
+  // Check if device is mobile
+  const checkMobileDevice = () => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+  };
 
   const loadOfficeLocation = async () => {
     try {
@@ -131,11 +147,11 @@ const OfficeMap = () => {
     setError('');
     loadOfficeLocation();
     getUserLocation();
-    setMapKey(prev => prev + 1); // Force re-render map
+    setMapKey(prev => prev + 1);
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius bumi dalam km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -143,7 +159,7 @@ const OfficeMap = () => {
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distance = R * c * 1000; // Jarak dalam meter
+    const distance = R * c * 1000;
     return Math.round(distance);
   };
 
@@ -157,6 +173,10 @@ const OfficeMap = () => {
     );
     return distance <= officeLocation.radius;
   };
+
+  // Check if should show map: Show only if NOT mobile OR if mobile but we assume sidebar is closed (we can't detect it reliably)
+  // In mobile, we will hide the map to avoid overlap with sidebar.
+  const shouldShowMap = !isMobile;
 
   if (loading) {
     return (
@@ -236,7 +256,7 @@ const OfficeMap = () => {
         </div>
       )}
 
-      {/* Map */}
+      {/* Map - Conditional Rendering */}
       <div className="bg-white rounded-2xl shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Peta Interaktif</h3>
         
@@ -252,74 +272,82 @@ const OfficeMap = () => {
             </button>
           </div>
         ) : officeLocation ? (
-          <div className="h-96 rounded-xl overflow-hidden border border-gray-200">
-            <MapContainer
-              key={mapKey}
-              center={[officeLocation.lat, officeLocation.lng]}
-              zoom={16}
-              style={{ height: '100%', width: '100%' }}
-              scrollWheelZoom={true}
-            >
-              <MapController center={officeLocation} radius={officeLocation.radius} />
-              
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
-              
-              {/* Office Marker */}
-              <Marker 
-                position={[officeLocation.lat, officeLocation.lng]}
-                icon={officeIcon}
+          shouldShowMap ? (
+            <div className="h-96 rounded-xl overflow-hidden border border-gray-200">
+              <MapContainer
+                key={mapKey}
+                center={[officeLocation.lat, officeLocation.lng]}
+                zoom={16}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
               >
-                <Popup>
-                  <div className="text-center min-w-[200px]">
-                    <strong className="text-blue-600">📍 Lokasi Kantor</strong>
-                    <br />
-                    <p className="mt-1">{officeLocation.address}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Radius: {officeLocation.radius}m
-                    </p>
-                  </div>
-                </Popup>
-              </Marker>
-              
-              {/* User Location Marker */}
-              {userLocation && (
+                <MapController center={officeLocation} />
+                
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                
+                {/* Office Marker */}
                 <Marker 
-                  position={[userLocation.lat, userLocation.lng]}
-                  icon={userIcon}
+                  position={[officeLocation.lat, officeLocation.lng]}
+                  icon={officeIcon}
                 >
                   <Popup>
                     <div className="text-center min-w-[200px]">
-                      <strong className="text-green-600">📍 Lokasi Anda</strong>
+                      <strong className="text-blue-600">📍 Lokasi Kantor</strong>
                       <br />
-                      <p className="mt-1">
-                        {calculateDistance(userLocation.lat, userLocation.lng, officeLocation.lat, officeLocation.lng)}m dari kantor
-                      </p>
-                      <p className={`text-sm font-medium mt-1 ${
-                        isWithinRadius() ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {isWithinRadius() ? '✅ Dalam radius' : '❌ Luar radius'}
+                      <p className="mt-1">{officeLocation.address}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Radius: {officeLocation.radius}m
                       </p>
                     </div>
                   </Popup>
                 </Marker>
-              )}
-              
-              {/* Office Radius Circle */}
-              <Circle
-                center={[officeLocation.lat, officeLocation.lng]}
-                radius={officeLocation.radius}
-                pathOptions={{ 
-                  color: 'blue', 
-                  fillColor: 'blue', 
-                  fillOpacity: 0.1,
-                  weight: 2
-                }}
-              />
-            </MapContainer>
-          </div>
+                
+                {/* User Location Marker */}
+                {userLocation && (
+                  <Marker 
+                    position={[userLocation.lat, userLocation.lng]}
+                    icon={userIcon}
+                  >
+                    <Popup>
+                      <div className="text-center min-w-[200px]">
+                        <strong className="text-green-600">📍 Lokasi Anda</strong>
+                        <br />
+                        <p className="mt-1">
+                          {calculateDistance(userLocation.lat, userLocation.lng, officeLocation.lat, officeLocation.lng)}m dari kantor
+                        </p>
+                        <p className={`text-sm font-medium mt-1 ${
+                          isWithinRadius() ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {isWithinRadius() ? '✅ Dalam radius' : '❌ Luar radius'}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+                
+                {/* Office Radius Circle */}
+                <Circle
+                  center={[officeLocation.lat, officeLocation.lng]}
+                  radius={officeLocation.radius}
+                  pathOptions={{ 
+                    color: 'blue', 
+                    fillColor: 'blue', 
+                    fillOpacity: 0.1,
+                    weight: 2
+                  }}
+                />
+              </MapContainer>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl">
+              <MapPin className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+              <p className="text-gray-600">Peta disembunyikan di mode mobile</p>
+              <p className="text-sm text-gray-500 mt-1">Untuk melihat peta, gunakan mode desktop atau buka aplikasi di layar yang lebih besar.</p>
+            </div>
+          )
         ) : (
           <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl">
             <MapPin className="h-16 w-16 mx-auto mb-4 text-gray-400" />
@@ -329,39 +357,41 @@ const OfficeMap = () => {
       </div>
 
       {/* Legend */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h4 className="font-semibold text-gray-900 mb-4">Keterangan Peta:</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 flex items-center justify-center">
-              <img 
-                src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" 
-                alt="Office Marker" 
-                className="w-4 h-6"
-              />
+      {shouldShowMap && (
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <h4 className="font-semibold text-gray-900 mb-4">Keterangan Peta:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 flex items-center justify-center">
+                <img 
+                  src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" 
+                  alt="Office Marker" 
+                  className="w-4 h-6"
+                />
+              </div>
+              <span className="text-gray-700">Lokasi Kantor</span>
             </div>
-            <span className="text-gray-700">Lokasi Kantor</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 flex items-center justify-center">
-              <img 
-                src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png" 
-                alt="User Marker" 
-                className="w-4 h-6"
-              />
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 flex items-center justify-center">
+                <img 
+                  src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png" 
+                  alt="User Marker" 
+                  className="w-4 h-6"
+                />
+              </div>
+              <span className="text-gray-700">Lokasi Anda</span>
             </div>
-            <span className="text-gray-700">Lokasi Anda</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 border-2 border-blue-500 rounded-full"></div>
-            <span className="text-gray-700">Radius Absensi ({officeLocation?.radius || 0}m)</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-blue-500 bg-opacity-10 rounded-full border border-blue-300"></div>
-            <span className="text-gray-700">Area Di Dalam Radius Kantor</span>
+            <div className="flex items-center space-x-3">
+              <div className="w-4 h-4 border-2 border-blue-500 rounded-full"></div>
+              <span className="text-gray-700">Radius Absensi ({officeLocation?.radius || 0}m)</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-4 h-4 bg-blue-500 bg-opacity-10 rounded-full border border-blue-300"></div>
+              <span className="text-gray-700">Area Di Dalam Radius Kantor</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

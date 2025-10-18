@@ -43,7 +43,7 @@
 - ✅ **Dashboard Analytics**: Overview performa karyawan dan statistik kehadiran
 
 ### 👷‍♂️ **Dashboard Karyawan**
-- ✅ **Check-in/Check-out Otomatis**: Absensi dengan validasi lokasi real-time
+- ✅ **Check-in/Check-out Otomatis**: Absensi dengan validasi lokasi real-time, dan Fitur verifikasi wajah
 - ✅ **Riwayat Kehadiran**: Lihat history absensi pribadi dengan filter tanggal
 - ✅ **Permintaan Cuti**: Ajukan cuti dengan berbagai jenis dan alasan
 - ✅ **Peta Kantor Interaktif**: Visualisasi lokasi kantor menggunakan Leaflet
@@ -55,6 +55,7 @@
 - ✅ **Role-based Access Control**: Permission system untuk Admin vs Employee
 - ✅ **Password Hashing**: Keamanan password menggunakan bcryptjs
 - ✅ **Session Management**: Auto-logout dan token refresh mechanism
+
 Sebelum menjalankan project ini, pastikan Anda memiliki:
 
 - 🟢 **Node.js** versi 18 atau lebih tinggi
@@ -66,27 +67,28 @@ Sebelum menjalankan project ini, pastikan Anda memiliki:
 
 ### 1. Clone Repository
 ```bash
-git clone < https://github.com/muhf-ahri/Sistem-Absensi.git >
+git clone https://github.com/muhf-ahri/Sistem-Absensi.git 
 cd Sistem-Absensi
 ```
 
 ### 2. Buat Database
-Kunjungi Website [[MongoDB] (https://www.mongodb.com/cloud/atlas)]
+Kunjungi Website MongoDB (https://www.mongodb.com/cloud/atlas)
 1. Daftar Akun dan isi format
-  - Email - gunakan email aktif
-  - First Name & Last Name
-  - Password - minimal 8 karakter
-  - Verifikasi email Anda melalui link yang dikirim
-
+    ```
+    Email - gunakan email aktif
+    First Name & Last Name
+    Password - minimal 8 karakter
+    Verifikasi email Anda melalui link yang dikirim
+    ```
 2. Membuat Cluster
     - Pilih Tier Cluster 
     - Lalu Create
   - Konfigurasi Provider
-  ```
-  Provider: AWS / Google Cloud / Azure
-  Region: ap-southeast-1 (Singapore) # Recommended untuk Indonesia
-  Cluster Name: myFirstCluster
-  ```
+    ```
+    Provider: AWS / Google Cloud / Azure
+    Region: ap-southeast-1 (Singapore) # Recommended untuk Indonesia
+    Cluster Name: myFirstCluster
+    ```
   - Addtional Settings
     - Cluster Tier: M0 Sandbox (FREE)
     - Additional Settings: Default
@@ -121,14 +123,14 @@ Kunjungi Website [[MongoDB] (https://www.mongodb.com/cloud/atlas)]
     - Pilih "Connect your application"
 
   - Copy Connection String
-  ```mongodb
-  mongodb+srv://adminUser:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
-  ```
+    ```mongodb
+    mongodb+srv://adminUser:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+    ```
 5. Koneksi dengan Aplikasi
   - Install dependencies
-  ```bash
-  npm install mongoose dotenv
-  ```
+    ```bash
+    npm install mongoose dotenv
+    ```
 
 ### 3. Setup Environment Variables
 Buat file `.env` di folder `backend/`:
@@ -166,6 +168,9 @@ npm run dev
 Frontend akan berjalan di `http://localhost:5173`
 
 ## 🎯 Cara Penggunaan
+
+### Create Account Admin
+- **Token Admin**: ADMIN123456 
 
 ### Login Default
 - **Admin**: `admin@company.com` / `admin123`
