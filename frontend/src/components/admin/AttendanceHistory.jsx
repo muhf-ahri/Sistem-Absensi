@@ -1,3 +1,5 @@
+// File: src/pages/Attendance/AttendanceHistory.jsx (atau sesuaikan path-nya)
+
 import React, { useState, useEffect } from 'react';
 import { api } from '../../utils/API';
 import { Calendar, Filter, Download, CheckCircle, XCircle, Clock, User } from 'lucide-react';
@@ -13,6 +15,11 @@ const AttendanceHistory = () => {
   });
   const [employees, setEmployees] = useState([]);
 
+  // State untuk pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Default 10 item per halaman
+  const [paginatedAttendance, setPaginatedAttendance] = useState([]);
+
   useEffect(() => {
     loadAttendance();
     loadEmployees();
@@ -25,6 +32,7 @@ const AttendanceHistory = () => {
       const params = new URLSearchParams(filterParams).toString();
       const response = await api.get(`/attendance/all?${params}`);
       setAttendance(response.data);
+      setCurrentPage(1); // Reset ke halaman pertama saat data baru dimuat
     } catch (error) {
       console.error('Error loading attendance:', error);
       setError('Gagal memuat data absensi. Silakan coba lagi.');
@@ -57,29 +65,53 @@ const AttendanceHistory = () => {
     loadAttendance();
   };
 
+  // Fungsi untuk mengupdate data yang ditampilkan berdasarkan halaman saat ini
+  useEffect(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = attendance.slice(indexOfFirstItem, indexOfLastItem);
+    setPaginatedAttendance(currentItems);
+  }, [attendance, currentPage, itemsPerPage]);
+
   const getStatus = (record) => {
     if (!record.checkIn) return { text: 'Tidak Hadir', color: 'text-red-600', bg: 'bg-red-100' };
     if (record.checkIn && !record.checkOut) return { text: 'Hanya Check-in', color: 'text-yellow-600', bg: 'bg-yellow-100' };
     return { text: 'Lengkap', color: 'text-green-600', bg: 'bg-green-100' };
   };
 
+  // Fungsi bantuan untuk memformat koordinat
+  const formatCoordinates = (lat, lng) => {
+    if (lat === undefined || lng === undefined || lat === null || lng === null || typeof lat !== 'number' || typeof lng !== 'number') {
+      return '–';
+    }
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  };
+
+  // Fungsi bantuan untuk mendapatkan inisial nama
+  const getInitial = (name) => {
+    if (!name || typeof name !== 'string') {
+      return '?'; // Atau simbol default lainnya
+    }
+    return name.charAt(0).toUpperCase();
+  };
+
   const exportToCSV = () => {
     const headers = ['Tanggal', 'Nama Karyawan', 'Email', 'Posisi', 'Check-in', 'Check-out', 'Status', 'Lokasi Check-in', 'Lokasi Check-out'];
     const csvData = attendance.map(record => [
       record.date,
-      record.userName,
-      record.userEmail,
-      record.userPosition,
+      record.userName || '-',
+      record.userEmail || '-',
+      record.userPosition || '-',
       record.checkIn ? new Date(record.checkIn.timestamp).toLocaleTimeString() : '-',
       record.checkOut ? new Date(record.checkOut.timestamp).toLocaleTimeString() : '-',
       getStatus(record).text,
-      record.checkIn && record.checkIn.latitude !== undefined && record.checkIn.longitude !== undefined ? `${record.checkIn.latitude.toFixed(4)}, ${record.checkIn.longitude.toFixed(4)}` : '-',
-      record.checkOut && record.checkOut.latitude !== undefined && record.checkOut.longitude !== undefined ? `${record.checkOut.latitude.toFixed(4)}, ${record.checkOut.longitude.toFixed(4)}` : '-'
+      record.checkIn ? formatCoordinates(record.checkIn.latitude, record.checkIn.longitude) : '-',
+      record.checkOut ? formatCoordinates(record.checkOut.latitude, record.checkOut.longitude) : '-'
     ]);
 
     const csvContent = [
       headers.join(','),
-      ...csvData.map(row => `"${row.map(cell => cell.replace(/"/g, '""')).join('","')}"`)
+      ...csvData.map(row => `"${row.map(cell => String(cell).replace(/"/g, '""')).join('","')}"`)
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -89,6 +121,23 @@ const AttendanceHistory = () => {
     a.download = `riwayat-absensi-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  // Hitung total halaman
+  const totalPages = Math.ceil(attendance.length / itemsPerPage);
+
+  // Fungsi untuk mengganti halaman
+  const goToPage = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  // Fungsi untuk mengganti jumlah item per halaman
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset ke halaman pertama saat jumlah item per halaman berubah
   };
 
   return (
@@ -212,94 +261,136 @@ const AttendanceHistory = () => {
             <p className="text-xs text-gray-600">Tidak ada riwayat absensi untuk periode yang dipilih</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Tanggal</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Karyawan</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Check-in</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Check-out</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Status</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap hidden sm:table-cell">Lokasi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {attendance.map((record) => {
-                  const status = getStatus(record);
-                  return (
-                    <tr key={record.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        {new Date(record.date).toLocaleDateString('id-ID', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 bg-blue-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-[10px] font-semibold">
-                              {record.userName?.charAt(0).toUpperCase()}
-                            </span>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-xs">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Tanggal</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Karyawan</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Check-in</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Check-out</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Status</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap hidden sm:table-cell">Lokasi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedAttendance.map((record) => { // Gunakan paginatedAttendance di sini
+                    const status = getStatus(record);
+                    return (
+                      <tr key={record.id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          {new Date(record.date).toLocaleDateString('id-ID', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short'
+                          })}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 bg-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-[10px] font-semibold">
+                                {getInitial(record.userName)}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{record.userName}</div>
+                              <div className="text-xs text-gray-500">{record.userPosition}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900">{record.userName}</div>
-                            <div className="text-xs text-gray-500">{record.userPosition}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        {record.checkIn ? (
-                          <div className="flex items-center gap-1">
-                            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                            <span>{new Date(record.checkIn.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <XCircle className="h-3.5 w-3.5 text-red-500" />
-                            <span className="text-red-600">–</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        {record.checkOut ? (
-                          <div className="flex items-center gap-1">
-                            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                            <span>{new Date(record.checkOut.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                          </div>
-                        ) : record.checkIn ? (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5 text-yellow-500" />
-                            <span className="text-yellow-600">–</span>
-                          </div>
-                        ) : (
-                          <span>–</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${status.bg} ${status.color}`}>
-                          {status.text}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-gray-500 hidden sm:table-cell">
-                        {record.checkIn && record.checkIn.latitude !== undefined && record.checkIn.longitude !== undefined ? (
-                          <div>
-                            <div>In: {record.checkIn.latitude.toFixed(4)}, {record.checkIn.longitude.toFixed(4)}</div>
-                            {record.checkOut && record.checkOut.latitude !== undefined && record.checkOut.longitude !== undefined && (
-                              <div>Out: {record.checkOut.latitude.toFixed(4)}, {record.checkOut.longitude.toFixed(4)}</div>
-                            )}
-                          </div>
-                        ) : (
-                          '–'
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          {record.checkIn ? (
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                              <span>{new Date(record.checkIn.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <XCircle className="h-3.5 w-3.5 text-red-500" />
+                              <span className="text-red-600">–</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          {record.checkOut ? (
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                              <span>{new Date(record.checkOut.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          ) : record.checkIn ? (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5 text-yellow-500" />
+                              <span className="text-yellow-600">–</span>
+                            </div>
+                          ) : (
+                            <span>–</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${status.bg} ${status.color}`}>
+                            {status.text}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-gray-500 hidden sm:table-cell">
+                          {record.checkIn ? (
+                            <div>
+                              <div>In: {formatCoordinates(record.checkIn.latitude, record.checkIn.longitude)}</div>
+                              {record.checkOut && (
+                                <div>Out: {formatCoordinates(record.checkOut.latitude, record.checkOut.longitude)}</div>
+                              )}
+                            </div>
+                          ) : (
+                            '–'
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <label htmlFor="itemsPerPage" className="text-sm text-gray-700">Items per page:</label>
+                <select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
+                  className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded-md text-sm ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  Previous
+                </button>
+
+                <span className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded-md text-sm ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

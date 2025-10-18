@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../../utils/API";
+import { useSweetAlert } from "../../hooks/useSweetAlert";
 import {
   BarChart,
   Bar,
@@ -44,6 +45,18 @@ const Reports = () => {
     endDate: new Date().toISOString().split("T")[0],
   });
 
+  // Gunakan custom hook SweetAlert
+  const {
+    successToast,
+    errorToast,
+    warningToast,
+    confirmation,
+    successDialog,
+    errorDialog,
+    loading: showLoadingAlert,
+    close: closeAlert,
+  } = useSweetAlert();
+
   useEffect(() => {
     loadReportData();
     loadLeaveData();
@@ -52,6 +65,7 @@ const Reports = () => {
   const loadReportData = async () => {
     try {
       setLoading(true);
+      const loadingAlert = showLoadingAlert("Memuat data laporan...");
 
       // Load attendance data for the date range
       const attendanceResponse = await api.get(
@@ -64,10 +78,10 @@ const Reports = () => {
         (emp) => emp.role === "employee"
       );
 
-      console.log("Attendance data:", attendanceData); // DEBUG
-      console.log("Employees:", employees); // DEBUG
+      console.log("Attendance data:", attendanceData);
+      console.log("Employees:", employees);
 
-      // Calculate summary - PERBAIKAN: Hitung hari kerja yang valid
+      // Calculate summary
       const start = new Date(dateRange.startDate);
       const end = new Date(dateRange.endDate);
       const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
@@ -77,25 +91,20 @@ const Reports = () => {
         (record) => record.checkIn && record.checkIn.timestamp
       ).length;
 
-      // Employee statistics - PERBAIKAN LOGIC
+      // Employee statistics
       const employeeStats = employees.map((employee) => {
-        // Cari attendance records untuk employee ini
         const employeeAttendance = attendanceData.filter(
           (record) =>
             record.userId === employee._id || record.userId === employee.id
         );
 
-        console.log(`Attendance for ${employee.name}:`, employeeAttendance); // DEBUG
+        console.log(`Attendance for ${employee.name}:`, employeeAttendance);
 
-        // Hitung present days (yang punya checkIn timestamp)
         const presentDays = employeeAttendance.filter(
           (record) => record.checkIn && record.checkIn.timestamp
         ).length;
 
-        // Hitung absent days (total days - present days)
         const absentDays = totalDays - presentDays;
-
-        // Hitung attendance rate (hindari division by zero)
         const attendanceRate =
           totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
@@ -104,17 +113,16 @@ const Reports = () => {
           present: presentDays,
           absent: absentDays,
           attendanceRate: attendanceRate,
-          totalDays: totalDays, // untuk debugging
+          totalDays: totalDays,
         };
       });
 
-      // PERBAIKAN: Hitung total absent yang akurat
       const totalEmployeeDays = employees.length * totalDays;
       const totalAbsent = totalEmployeeDays - totalPresent;
       const attendanceRate =
         totalEmployeeDays > 0 ? (totalPresent / totalEmployeeDays) * 100 : 0;
 
-      // Daily attendance data for chart - PERBAIKAN
+      // Daily attendance data for chart
       const dailyData = {};
       attendanceData.forEach((record) => {
         if (record.checkIn && record.checkIn.timestamp && record.date) {
@@ -138,7 +146,7 @@ const Reports = () => {
           }),
           present: present,
           absent: absent,
-          fullDate: dateStr, // untuk sorting
+          fullDate: dateStr,
         });
 
         currentDate.setDate(currentDate.getDate() + 1);
@@ -157,22 +165,20 @@ const Reports = () => {
           dateRange: `${new Date(dateRange.startDate).toLocaleDateString(
             "id-ID"
           )} - ${new Date(dateRange.endDate).toLocaleDateString("id-ID")}`,
-          totalDays: totalDays, // untuk info
+          totalDays: totalDays,
         },
         employeeStats,
       });
 
-      console.log("Report data calculated:", {
-        // DEBUG
-        totalEmployees: employees.length,
-        totalPresent,
-        totalAbsent,
-        attendanceRate,
-        employeeStats,
-      });
+      closeAlert();
+      successToast("Data laporan berhasil dimuat", 2000);
     } catch (error) {
+      closeAlert();
       console.error("Error loading report data:", error);
-      alert("Gagal memuat data laporan: " + error.message);
+      errorDialog(
+        "Gagal Memuat Laporan",
+        error.response?.data?.error || error.message
+      );
     } finally {
       setLoading(false);
     }
@@ -181,12 +187,29 @@ const Reports = () => {
   const loadLeaveData = async () => {
     try {
       setLoadingLeave(true);
+      const loadingAlert = showLoadingAlert("Memuat data cuti...");
+
       const response = await api.get("/leaves/all");
-      console.log("Leave data loaded:", response.data); // DEBUG
+      console.log("Leave data loaded:", response.data);
       setLeaveData(response.data);
+
+      closeAlert();
+
+      if (response.data.length > 0) {
+        const pendingCount = response.data.filter(
+          (leave) => leave.status === "pending"
+        ).length;
+        if (pendingCount > 0) {
+          successToast(
+            `${pendingCount} pengajuan cuti menunggu persetujuan`,
+            3000
+          );
+        }
+      }
     } catch (error) {
+      closeAlert();
       console.error("Error loading leave data:", error);
-      alert("Gagal memuat data cuti: " + error.message);
+      errorToast("Gagal memuat data cuti");
     } finally {
       setLoadingLeave(false);
     }
@@ -199,18 +222,30 @@ const Reports = () => {
 
   const handleApproveLeave = async (leave) => {
     const leaveId = getLeaveId(leave);
-    console.log("Approving leave:", leaveId, leave);
+    const userName = leave.userName || "Karyawan";
 
     if (!leaveId) {
-      alert("Error: ID cuti tidak valid");
+      errorToast("ID cuti tidak valid");
+      return;
+    }
+
+    const confirmationResult = await confirmation(
+      "Setujui Pengajuan Cuti",
+      `Apakah Anda yakin ingin menyetujui pengajuan cuti dari ${userName}?`,
+      "Ya, Setujui"
+    );
+
+    if (!confirmationResult.isConfirmed) {
       return;
     }
 
     try {
       setLoadingLeave(true);
+      const loadingAlert = showLoadingAlert("Menyetujui pengajuan cuti...");
+
       await api.put(`/leaves/${leaveId}/status`, {
         status: "approved",
-        processedBy: null, // GUNAKAN null, bukan "admin"
+        processedBy: null,
       });
 
       // Update local state
@@ -221,18 +256,23 @@ const Reports = () => {
                 ...item,
                 status: "approved",
                 processedAt: new Date().toISOString(),
-                processedByName: "Admin", // Tetap tampilkan di UI
+                processedByName: "Admin",
               }
             : item
         )
       );
 
-      alert("Pengajuan cuti berhasil disetujui");
+      closeAlert();
+      successDialog(
+        "Pengajuan Disetujui",
+        `Pengajuan cuti dari ${userName} berhasil disetujui`
+      );
     } catch (error) {
+      closeAlert();
       console.error("Approve leave error:", error);
-      alert(
-        "Gagal menyetujui pengajuan cuti: " +
-          (error.response?.data?.error || error.message)
+      errorDialog(
+        "Gagal Menyetujui",
+        error.response?.data?.error || error.message
       );
     } finally {
       setLoadingLeave(false);
@@ -241,18 +281,30 @@ const Reports = () => {
 
   const handleRejectLeave = async (leave) => {
     const leaveId = getLeaveId(leave);
-    console.log("Rejecting leave:", leaveId, leave);
+    const userName = leave.userName || "Karyawan";
 
     if (!leaveId) {
-      alert("Error: ID cuti tidak valid");
+      errorToast("ID cuti tidak valid");
+      return;
+    }
+
+    const confirmationResult = await confirmation(
+      "Tolak Pengajuan Cuti",
+      `Apakah Anda yakin ingin menolak pengajuan cuti dari ${userName}?`,
+      "Ya, Tolak"
+    );
+
+    if (!confirmationResult.isConfirmed) {
       return;
     }
 
     try {
       setLoadingLeave(true);
+      const loadingAlert = showLoadingAlert("Menolak pengajuan cuti...");
+
       await api.put(`/leaves/${leaveId}/status`, {
         status: "rejected",
-        processedBy: null, // GUNAKAN null, bukan "admin"
+        processedBy: null,
       });
 
       // Update local state
@@ -263,18 +315,23 @@ const Reports = () => {
                 ...item,
                 status: "rejected",
                 processedAt: new Date().toISOString(),
-                processedByName: "Admin", // Tetap tampilkan di UI
+                processedByName: "Admin",
               }
             : item
         )
       );
 
-      alert("Pengajuan cuti berhasil ditolak");
+      closeAlert();
+      successDialog(
+        "Pengajuan Ditolak",
+        `Pengajuan cuti dari ${userName} telah ditolak`
+      );
     } catch (error) {
+      closeAlert();
       console.error("Reject leave error:", error);
-      alert(
-        "Gagal menolak pengajuan cuti: " +
-          (error.response?.data?.error || error.message)
+      errorDialog(
+        "Gagal Menolak",
+        error.response?.data?.error || error.message
       );
     } finally {
       setLoadingLeave(false);
@@ -288,29 +345,70 @@ const Reports = () => {
     });
   };
 
-  const handleApplyDateRange = () => {
-    loadReportData();
+  const handleApplyDateRange = async () => {
+    // Validasi date range
+    const start = new Date(dateRange.startDate);
+    const end = new Date(dateRange.endDate);
+
+    if (start > end) {
+      errorToast("Tanggal mulai tidak boleh setelah tanggal selesai");
+      return;
+    }
+
+    // Validasi range maksimal 1 tahun
+    const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+    if (end - start > oneYearMs) {
+      warningToast("Rentang waktu maksimal 1 tahun");
+      return;
+    }
+
+    await loadReportData();
   };
 
-  const exportReport = () => {
-    const report = {
-      title: "Laporan Absensi Karyawan",
-      period: reportData.summary.dateRange,
-      summary: reportData.summary,
-      employeeStats: reportData.employeeStats,
-    };
+  const exportReport = async () => {
+    try {
+      const confirmationResult = await confirmation(
+        "Export Laporan",
+        "Apakah Anda ingin mengexport laporan dalam format JSON?",
+        "Ya, Export"
+      );
 
-    const blob = new Blob([JSON.stringify(report, null, 2)], {
-      type: "application/json",
-    });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `laporan-absensi-${
-      new Date().toISOString().split("T")[0]
-    }.json`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+      if (!confirmationResult.isConfirmed) {
+        return;
+      }
+
+      const loadingAlert = showLoadingAlert("Mempersiapkan file export...");
+
+      const report = {
+        title: "Laporan Absensi Karyawan",
+        period: reportData.summary.dateRange,
+        summary: reportData.summary,
+        employeeStats: reportData.employeeStats,
+        exportDate: new Date().toISOString(),
+        totalRecords: reportData.attendance.length,
+      };
+
+      // Simulasi delay untuk persiapan file
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const blob = new Blob([JSON.stringify(report, null, 2)], {
+        type: "application/json",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `laporan-absensi-${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      closeAlert();
+      successToast("Laporan berhasil diexport", 2000);
+    } catch (error) {
+      closeAlert();
+      errorToast("Gagal mengexport laporan");
+    }
   };
 
   const getStatusIcon = (status) => {

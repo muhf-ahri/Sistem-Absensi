@@ -18,6 +18,9 @@
 ---
 
 ## 📋 Table of Contents
+
+
+- [🧩 Penjelasan](#-penjelasan)
 - [✨ Fitur Utama](#-fitur-utama)
 - [🚀 Instalasi & Setup](#-instalasi--setup)
 - [🎯 Cara Penggunaan](#-cara-penggunaan)
@@ -32,9 +35,16 @@
 
 ---
 
+## 🧩 Penjelasan
+
+Sebuah website yang digunakan untuk mencatat kehadiran (masuk, pulang, dan pengajuan cuti) karyawan atau anggota suatu organisasi secara digital.
+
+Website absensi kami adalah solusi kehadiran digital mutakhir yang mengintegrasikan verifikasi wajah (face recognition) dan presisi geolocation berbasis jarak untuk memastikan keakuratan dan mencegah praktik absensi yang tidak sah.
+
 ## ✨ Fitur Utama
 
 ### 👨‍💼 **Dashboard Admin**
+
 - ✅ **Manajemen Karyawan**: Tambah, edit, hapus data karyawan dengan mudah
 - ✅ **Monitoring Real-time**: Pantau kehadiran semua karyawan secara langsung
 - ✅ **Laporan & Analitik**: Generate laporan kehadiran dengan visualisasi chart
@@ -43,6 +53,7 @@
 - ✅ **Dashboard Analytics**: Overview performa karyawan dan statistik kehadiran
 
 ### 👷‍♂️ **Dashboard Karyawan**
+
 - ✅ **Check-in/Check-out Otomatis**: Absensi dengan validasi lokasi real-time, dan Fitur verifikasi wajah
 - ✅ **Riwayat Kehadiran**: Lihat history absensi pribadi dengan filter tanggal
 - ✅ **Permintaan Cuti**: Ajukan cuti dengan berbagai jenis dan alasan
@@ -51,6 +62,7 @@
 - ✅ **Notifikasi Real-time**: Update status absensi dan persetujuan cuti
 
 ### 🔐 **Sistem Autentikasi & Keamanan**
+
 - ✅ **JWT Authentication**: Sistem login aman dengan token-based authentication
 - ✅ **Role-based Access Control**: Permission system untuk Admin vs Employee
 - ✅ **Password Hashing**: Keamanan password menggunakan bcryptjs
@@ -66,117 +78,139 @@ Sebelum menjalankan project ini, pastikan Anda memiliki:
 ## 🚀 Instalasi & Setup
 
 ### 1. Clone Repository
+
 ```bash
-git clone https://github.com/muhf-ahri/Sistem-Absensi.git 
+git clone https://github.com/muhf-ahri/Sistem-Absensi.git
 cd Sistem-Absensi
 ```
 
 ### 2. Buat Database
+
 Kunjungi Website MongoDB (https://www.mongodb.com/cloud/atlas)
+
 1. Daftar Akun dan isi format
-    ```
-    Email - gunakan email aktif
-    First Name & Last Name
-    Password - minimal 8 karakter
-    Verifikasi email Anda melalui link yang dikirim
-    ```
+   ```
+   Email - gunakan email aktif
+   First Name & Last Name
+   Password - minimal 8 karakter
+   Verifikasi email Anda melalui link yang dikirim
+   ```
 2. Membuat Cluster
-    - Pilih Tier Cluster 
-    - Lalu Create
-  - Konfigurasi Provider
-    ```
-    Provider: AWS / Google Cloud / Azure
-    Region: ap-southeast-1 (Singapore) # Recommended untuk Indonesia
-    Cluster Name: myFirstCluster
-    ```
-  - Addtional Settings
-    - Cluster Tier: M0 Sandbox (FREE)
-    - Additional Settings: Default
-    - Klik "Create Cluster"
+   - Pilih Tier Cluster
+   - Lalu Create
+
+- Konfigurasi Provider
+  ```
+  Provider: AWS / Google Cloud / Azure
+  Region: ap-southeast-1 (Singapore) # Recommended untuk Indonesia
+  Cluster Name: myFirstCluster
+  ```
+- Addtional Settings
+  - Cluster Tier: M0 Sandbox (FREE)
+  - Additional Settings: Default
+  - Klik "Create Cluster"
 
 3. Setup Security & Network Access
-  - Buat database User
-    - Navigasi ke Security → Database Access
-    - Klik "Add New Database User"
-    ```
-    Authentication Method: Password
-    Username: adminUser
-    Password: [Buat password kuat]
-    Database User Privileges: Read and write to any database
-    ```
-    - Klik "Add User"
-  - Konfigurasi Network Access
-    - Navigasi ke Security → Network Access
-    - Klik "Add IP Address"
-    ```
-    Access List Entry: 0.0.0.0/0
-    Comment: Development Access
-    ```
-    - Klik "Confirm"
+
+- Buat database User
+  - Navigasi ke Security → Database Access
+  - Klik "Add New Database User"
+  ```
+  Authentication Method: Password
+  Username: adminUser
+  Password: [Buat password kuat]
+  Database User Privileges: Read and write to any database
+  ```
+  - Klik "Add User"
+- Konfigurasi Network Access
+  - Navigasi ke Security → Network Access
+  - Klik "Add IP Address"
+  ```
+  Access List Entry: 0.0.0.0/0
+  Comment: Development Access
+  ```
+  - Klik "Confirm"
     ⚠️ Security Note: 0.0.0.0/0 membolehkan akses dari IP mana saja. Untuk production, gunakan IP specific.
+
 4. Mendapatkan Connection String
-  - Koneksi ke Cluster
-    - Kembali ke Clusters
-    - Klik tombol "Connect" pada cluster Anda
 
-  - Pilih Connection Method
-    - Pilih "Connect your application"
+- Koneksi ke Cluster
 
-  - Copy Connection String
-    ```mongodb
-    mongodb+srv://adminUser:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
-    ```
+  - Kembali ke Clusters
+  - Klik tombol "Connect" pada cluster Anda
+
+- Pilih Connection Method
+
+  - Pilih "Connect your application"
+
+- Copy Connection String
+  ```mongodb
+  mongodb+srv://adminUser:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+  ```
+
 5. Koneksi dengan Aplikasi
-  - Install dependencies
-    ```bash
-    npm install mongoose dotenv
-    ```
+
+- Install dependencies
+  ```bash
+  npm install mongoose dotenv
+  ```
 
 ### 3. Setup Environment Variables
+
 Buat file `.env` di folder `backend/`:
+
 ```env
-MONGODB_URI=mongodb://localhost:27017/absensi-karyawan
+MONGODB_URI=mongodb+srv://adminUser:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
 PORT=9999
 NODE_ENV=development
 JWT_SECRET=your-super-secret-jwt-key-here
 ```
 
 ### 4. Setup Backend
+
 ```bash
 cd backend
 npm install
 ```
 
 ### 5. Setup Frontend
+
 ```bash
 cd frontend
 npm install
 ```
 
 ### 6. Jalankan Backend
+
 ```bash
 cd backend
 node server.js
 ```
+
 Server akan berjalan di `http://localhost:9999`
 
 ### 7. Jalankan Frontend
+
 ```bash
 cd frontend
 npm run dev
 ```
+
 Frontend akan berjalan di `http://localhost:5173`
 
 ## 🎯 Cara Penggunaan
 
 ### Create Account Admin
-- **Token Admin**: ADMIN123456 
+
+- **Token Admin**: ADMIN123456
 
 ### Login Default
+
 - **Admin**: `admin@company.com` / `admin123`
 - **Employee**: Daftar akun baru atau gunakan akun yang dibuat admin
 
 ### Alur Kerja
+
 1. **Admin** login dan mengelola karyawan serta pengaturan
 2. **Karyawan** login dan melakukan check-in/check-out
 3. Sistem validasi lokasi otomatis berdasarkan radius kantor
@@ -185,26 +219,31 @@ Frontend akan berjalan di `http://localhost:5173`
 ## 📡 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/login` - Login user
 - `POST /api/auth/register` - Register user baru
 
 ### Attendance
+
 - `POST /api/attendance/checkin` - Check-in absensi
 - `POST /api/attendance/checkout` - Check-out absensi
 - `GET /api/attendance/history` - Riwayat absensi
 
 ### Users (Admin Only)
+
 - `GET /api/users` - List semua karyawan
 - `POST /api/users` - Tambah karyawan baru
 - `PUT /api/users/:id` - Update karyawan
 - `DELETE /api/users/:id` - Hapus karyawan
 
 ### Leaves
+
 - `GET /api/leaves` - List permintaan cuti
 - `POST /api/leaves` - Ajukan cuti baru
 - `PUT /api/leaves/:id` - Update status cuti (approve/reject)
 
 ### Settings
+
 - `GET /api/settings` - Ambil pengaturan kantor
 - `PUT /api/settings` - Update pengaturan kantor
 
@@ -241,7 +280,7 @@ Untuk menjalankan aplikasi ini, Anda perlu mengatur beberapa environment variabl
 
 ```.env
 # Database Configuration
-MONGODB_URI=mongodb+srv://user_anda:password@cluster0.qbd5ra6.mongodb.net/?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://adminUser:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
 
 # Server Configuration
 PORT=9999
