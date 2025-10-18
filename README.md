@@ -27,9 +27,6 @@
 - [📡 API Documentation](#-api-documentation)
 - [🏗️ Arsitektur Sistem](#️-arsitektur-sistem)
 - [🔧 Environment Variables](#-environment-variables)
-- [🚀 Deployment](#-deployment)
-- [🧪 Testing](#-testing)
-- [🔍 Troubleshooting](#-troubleshooting)
 - [📞 Contact](#-contact)
 - [🙏 Acknowledgments](#-acknowledgments)
 
