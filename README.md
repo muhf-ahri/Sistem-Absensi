@@ -28,7 +28,6 @@
 - [📁 Struktur Project](#-struktur-project)
 - [🔧 Environment Variables](#-environment-variables)
 - [📞 Contact](#-contact)
-- [🙏 Acknowledgments](#-acknowledgments)
 
 ---
 
