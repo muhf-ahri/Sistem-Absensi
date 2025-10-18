@@ -1,6 +1,29 @@
+// File: src/pages/Settings/OfficeSettings.js (atau sesuaikan path-nya)
+
 import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { api } from '../../utils/API';
 import { MapPin, Building2, Clock, Save, Target, Users } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default markers in react-leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Komponen untuk menangani klik pada peta
+const MapClickHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click: (e) => {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+};
 
 const OfficeSettings = () => {
   const [settings, setSettings] = useState({
@@ -210,6 +233,18 @@ const OfficeSettings = () => {
     );
   };
 
+  // Fungsi untuk menangani klik pada peta
+  const handleMapClick = (lat, lng) => {
+    setSettings(prev => ({
+      ...prev,
+      officeLocation: {
+        ...prev.officeLocation,
+        latitude: lat.toString(),
+        longitude: lng.toString()
+      }
+    }));
+  };
+
   const isSavingSection = (section) => saving && saveSection === section;
 
   if (loading) {
@@ -219,6 +254,13 @@ const OfficeSettings = () => {
       </div>
     );
   }
+
+  // Ambil koordinat untuk peta, default ke Jakarta jika tidak ada
+  const mapCenter = [
+    parseFloat(settings.officeLocation.latitude) || -6.2088,
+    parseFloat(settings.officeLocation.longitude) || 106.8456
+  ];
+  const zoomLevel = 16;
 
   return (
     <div className="space-y-6">
@@ -402,6 +444,37 @@ const OfficeSettings = () => {
                 placeholder="Jl. Contoh No. 123, Jakarta"
                 required
               />
+            </div>
+          </div>
+
+          {/* Bagian Peta */}
+          <div className="mt-6">
+            <h4 className="text-md font-medium text-gray-700 mb-2">Peta Lokasi Kantor</h4>
+            <p className="text-sm text-gray-500 mb-3">Klik pada peta untuk mengatur lokasi kantor.</p>
+            <div className="h-80 rounded-xl overflow-hidden border border-gray-300">
+              <MapContainer
+                center={mapCenter}
+                zoom={zoomLevel}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MapClickHandler onMapClick={handleMapClick} />
+                {/* Tampilkan marker jika koordinat valid */}
+                {mapCenter[0] && mapCenter[1] && !isNaN(mapCenter[0]) && !isNaN(mapCenter[1]) && (
+                  <Marker position={mapCenter}>
+                    <Popup>
+                      <div>
+                        <strong>Lokasi Kantor</strong><br />
+                        {settings.officeLocation.address || 'Alamat belum diisi'}
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+              </MapContainer>
             </div>
           </div>
 

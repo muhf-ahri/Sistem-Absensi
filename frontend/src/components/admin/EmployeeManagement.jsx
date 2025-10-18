@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../utils/API';
+import { useSweetAlert } from '../../hooks/useSweetAlert';
 import { 
   Users, 
   Plus, 
@@ -26,6 +27,18 @@ const EmployeeManagement = () => {
     password: 'password123'
   });
 
+  // Gunakan custom hook SweetAlert
+  const {
+    successToast,
+    errorToast,
+    warningToast,
+    confirmation,
+    successDialog,
+    errorDialog,
+    loading: showLoadingAlert,
+    close: closeAlert
+  } = useSweetAlert();
+
   useEffect(() => {
     loadEmployees();
   }, []);
@@ -33,30 +46,89 @@ const EmployeeManagement = () => {
   const loadEmployees = async () => {
     try {
       setLoading(true);
+      const loadingAlert = showLoadingAlert("Memuat data karyawan...");
+
       const response = await api.get('/users');
       console.log('Employees data:', response.data);
       setEmployees(response.data);
+
+      closeAlert();
+      successToast("Data karyawan berhasil dimuat", 2000);
     } catch (error) {
+      closeAlert();
       console.error('Error loading employees:', error);
       console.error('Error details:', error.response);
-      alert('Gagal memuat data karyawan: ' + (error.response?.data?.error || error.message));
+      errorDialog(
+        "Gagal Memuat Data",
+        error.response?.data?.error || error.message
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      errorToast("Nama lengkap harus diisi");
+      return false;
+    }
+
+    if (!formData.email.trim()) {
+      errorToast("Email harus diisi");
+      return false;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      errorToast("Format email tidak valid");
+      return false;
+    }
+
+    if (!formData.position.trim()) {
+      errorToast("Posisi harus diisi");
+      return false;
+    }
+
+    if (!editingEmployee && !formData.password) {
+      errorToast("Password harus diisi");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     try {
+      const loadingAlert = showLoadingAlert(
+        editingEmployee ? "Mengupdate data karyawan..." : "Menambahkan karyawan baru..."
+      );
+
       if (editingEmployee) {
         // Update employee - hanya update data, tanpa password
         const { password, ...updateData } = formData;
         await api.put(`/users/${editingEmployee.id}`, updateData);
-        alert('Data karyawan berhasil diupdate');
+        
+        closeAlert();
+        successDialog(
+          "Berhasil Update",
+          `Data karyawan ${formData.name} berhasil diupdate`
+        );
       } else {
         // Register new employee
         await api.post('/auth/register', formData);
-        alert('Karyawan baru berhasil ditambahkan');
+        
+        closeAlert();
+        successDialog(
+          "Berhasil Tambah",
+          `Karyawan ${formData.name} berhasil ditambahkan`
+        );
       }
       
       setShowAddModal(false);
@@ -64,8 +136,12 @@ const EmployeeManagement = () => {
       setFormData({ name: '', email: '', position: '', role: 'employee', password: 'password123' });
       loadEmployees();
     } catch (error) {
+      closeAlert();
       console.error('Submit error:', error);
-      alert(error.response?.data?.error || 'Terjadi kesalahan');
+      errorDialog(
+        editingEmployee ? "Gagal Update" : "Gagal Tambah",
+        error.response?.data?.error || 'Terjadi kesalahan'
+      );
     }
   };
 
@@ -82,27 +158,102 @@ const EmployeeManagement = () => {
   };
 
   const handleDelete = async (employeeId) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus karyawan ini?')) {
-      try {
-        await api.delete(`/users/${employeeId}`);
-        alert('Karyawan berhasil dihapus');
-        loadEmployees();
-      } catch (error) {
-        alert(error.response?.data?.error || 'Gagal menghapus karyawan');
-      }
+    const employee = employees.find(emp => emp.id === employeeId);
+    
+    const confirmationResult = await confirmation(
+      "Hapus Karyawan",
+      `Apakah Anda yakin ingin menghapus karyawan ${employee?.name}? Tindakan ini tidak dapat dibatalkan.`,
+      "Ya, Hapus"
+    );
+
+    if (!confirmationResult.isConfirmed) {
+      return;
+    }
+
+    try {
+      const loadingAlert = showLoadingAlert("Menghapus karyawan...");
+
+      await api.delete(`/users/${employeeId}`);
+      
+      closeAlert();
+      successDialog(
+        "Berhasil Hapus",
+        `Karyawan ${employee?.name} berhasil dihapus`
+      );
+      
+      loadEmployees();
+    } catch (error) {
+      closeAlert();
+      errorDialog(
+        "Gagal Hapus",
+        error.response?.data?.error || 'Gagal menghapus karyawan'
+      );
     }
   };
 
   const resetPassword = async (employeeId) => {
-    if (window.confirm('Reset password karyawan ini ke "password123"?')) {
-      try {
-        await api.post(`/users/${employeeId}/reset-password`, {
-          newPassword: 'password123'
-        });
-        alert('Password berhasil direset ke "password123"');
-      } catch (error) {
-        alert(error.response?.data?.error || 'Gagal reset password');
-      }
+    const employee = employees.find(emp => emp.id === employeeId);
+    
+    const confirmationResult = await confirmation(
+      "Reset Password",
+      `Reset password ${employee?.name} ke "password123"? Karyawan harus login ulang setelah reset.`,
+      "Ya, Reset"
+    );
+
+    if (!confirmationResult.isConfirmed) {
+      return;
+    }
+
+    try {
+      const loadingAlert = showLoadingAlert("Mereset password...");
+
+      await api.post(`/users/${employeeId}/reset-password`, {
+        newPassword: 'password123'
+      });
+      
+      closeAlert();
+      successDialog(
+        "Berhasil Reset",
+        `Password ${employee?.name} berhasil direset ke "password123"`
+      );
+    } catch (error) {
+      closeAlert();
+      errorDialog(
+        "Gagal Reset",
+        error.response?.data?.error || 'Gagal reset password'
+      );
+    }
+  };
+
+  const handleAddEmployee = () => {
+    setEditingEmployee(null);
+    setFormData({ 
+      name: '', 
+      email: '', 
+      position: '', 
+      role: 'employee', 
+      password: 'password123' 
+    });
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    if (formData.name || formData.email || formData.position) {
+      confirmation(
+        "Batalkan Perubahan",
+        "Data yang sudah diisi akan hilang. Apakah Anda yakin?",
+        "Ya, Batalkan"
+      ).then((result) => {
+        if (result.isConfirmed) {
+          setShowAddModal(false);
+          setEditingEmployee(null);
+          setFormData({ name: '', email: '', position: '', role: 'employee', password: 'password123' });
+          successToast("Perubahan dibatalkan", 2000);
+        }
+      });
+    } else {
+      setShowAddModal(false);
+      setEditingEmployee(null);
     }
   };
 
@@ -122,7 +273,7 @@ const EmployeeManagement = () => {
             <p className="text-sm text-gray-600">Kelola data karyawan dan akses sistem</p>
           </div>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={handleAddEmployee}
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
           >
             <Plus className="h-4 w-4" />
@@ -146,9 +297,10 @@ const EmployeeManagement = () => {
           </div>
           <button 
             onClick={loadEmployees}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
         </div>
@@ -261,52 +413,85 @@ const EmployeeManagement = () => {
             </p>
           </div>
         )}
+
+        {/* Summary Info */}
+        {!loading && filteredEmployees.length > 0 && (
+          <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-600">
+              <div>
+                Menampilkan <span className="font-semibold">{filteredEmployees.length}</span> dari{' '}
+                <span className="font-semibold">{employees.length}</span> karyawan
+              </div>
+              <div className="flex gap-4 mt-1 sm:mt-0">
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Karyawan: {employees.filter(emp => emp.role === 'employee').length}
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  Admin: {employees.filter(emp => emp.role === 'admin').length}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-sm w-full p-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">
-              {editingEmployee ? 'Edit Karyawan' : 'Tambah Karyawan'}
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-gray-900">
+                {editingEmployee ? 'Edit Karyawan' : 'Tambah Karyawan'}
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                &times;
+              </button>
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Nama Lengkap
+                  Nama Lengkap *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Masukkan nama lengkap"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Email
+                  Email *
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="email@perusahaan.com"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Posisi
+                  Posisi *
                 </label>
                 <input
                   type="text"
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                   className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Posisi/jabatan"
                   required
                 />
               </div>
@@ -328,17 +513,18 @@ const EmployeeManagement = () => {
               {!editingEmployee && (
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Password Default
+                    Password Default *
                   </label>
                   <input
                     type="text"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Password untuk login pertama"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Password default untuk login pertama
+                    Password default untuk login pertama kali
                   </p>
                 </div>
               )}
@@ -346,11 +532,7 @@ const EmployeeManagement = () => {
               <div className="flex gap-2 pt-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingEmployee(null);
-                    setFormData({ name: '', email: '', position: '', role: 'employee', password: 'password123' });
-                  }}
+                  onClick={handleCloseModal}
                   className="flex-1 px-3 py-1.5 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Batal
