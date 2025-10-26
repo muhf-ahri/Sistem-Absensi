@@ -43,14 +43,31 @@ const EmployeeManagement = () => {
     loadEmployees();
   }, []);
 
+  const transformEmployeeData = (employees) => {
+    return employees.map(employee => ({
+      ...employee,
+      id: employee._id || employee.id, // Transform _id menjadi id
+      name: employee.name || '',
+      email: employee.email || '',
+      position: employee.position || '',
+      role: employee.role || 'employee',
+      createdAt: employee.createdAt || employee.created_date
+    }));
+  };
+
   const loadEmployees = async () => {
     try {
       setLoading(true);
       const loadingAlert = showLoadingAlert("Memuat data karyawan...");
 
       const response = await api.get('/users');
-      console.log('Employees data:', response.data);
-      setEmployees(response.data);
+      console.log('Raw employees data:', response.data);
+      
+      // Transform data dari backend
+      const transformedEmployees = transformEmployeeData(response.data);
+      console.log('Transformed employees:', transformedEmployees);
+      
+      setEmployees(transformedEmployees);
 
       closeAlert();
       successToast("Data karyawan berhasil dimuat", 2000);
@@ -113,7 +130,14 @@ const EmployeeManagement = () => {
       if (editingEmployee) {
         // Update employee - hanya update data, tanpa password
         const { password, ...updateData } = formData;
-        await api.put(`/users/${editingEmployee.id}`, updateData);
+        
+        // Gunakan ID yang benar (baik _id maupun id)
+        const employeeId = editingEmployee._id || editingEmployee.id;
+        console.log('Updating employee with ID:', employeeId);
+        console.log('Update data:', updateData);
+        
+        const response = await api.put(`/users/${employeeId}`, updateData);
+        console.log('Update response:', response);
         
         closeAlert();
         successDialog(
@@ -122,6 +146,7 @@ const EmployeeManagement = () => {
         );
       } else {
         // Register new employee
+        console.log('Adding new employee:', formData);
         await api.post('/auth/register', formData);
         
         closeAlert();
@@ -138,6 +163,7 @@ const EmployeeManagement = () => {
     } catch (error) {
       closeAlert();
       console.error('Submit error:', error);
+      console.error('Error response:', error.response);
       errorDialog(
         editingEmployee ? "Gagal Update" : "Gagal Tambah",
         error.response?.data?.error || 'Terjadi kesalahan'
@@ -146,13 +172,14 @@ const EmployeeManagement = () => {
   };
 
   const handleEdit = (employee) => {
+    console.log('Editing employee:', employee);
     setEditingEmployee(employee);
     setFormData({
       name: employee.name,
       email: employee.email,
       position: employee.position,
       role: employee.role,
-      password: 'password123'
+      password: 'password123' // Tidak digunakan saat update, hanya untuk konsistensi form
     });
     setShowAddModal(true);
   };
@@ -173,7 +200,11 @@ const EmployeeManagement = () => {
     try {
       const loadingAlert = showLoadingAlert("Menghapus karyawan...");
 
-      await api.delete(`/users/${employeeId}`);
+      // Gunakan ID yang benar
+      const idToDelete = employee._id || employeeId;
+      console.log('Deleting employee with ID:', idToDelete);
+      
+      await api.delete(`/users/${idToDelete}`);
       
       closeAlert();
       successDialog(
@@ -184,6 +215,7 @@ const EmployeeManagement = () => {
       loadEmployees();
     } catch (error) {
       closeAlert();
+      console.error('Delete error:', error);
       errorDialog(
         "Gagal Hapus",
         error.response?.data?.error || 'Gagal menghapus karyawan'
@@ -207,7 +239,11 @@ const EmployeeManagement = () => {
     try {
       const loadingAlert = showLoadingAlert("Mereset password...");
 
-      await api.post(`/users/${employeeId}/reset-password`, {
+      // Gunakan ID yang benar
+      const idToReset = employee._id || employeeId;
+      console.log('Resetting password for employee ID:', idToReset);
+      
+      await api.post(`/users/${idToReset}/reset-password`, {
         newPassword: 'password123'
       });
       
@@ -218,6 +254,7 @@ const EmployeeManagement = () => {
       );
     } catch (error) {
       closeAlert();
+      console.error('Reset password error:', error);
       errorDialog(
         "Gagal Reset",
         error.response?.data?.error || 'Gagal reset password'

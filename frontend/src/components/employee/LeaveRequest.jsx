@@ -281,7 +281,6 @@ const LeaveRequest = () => {
                   required
                 >
                   <option value="cuti">Cuti Tahunan</option>
-                  <option value="sakit">Sakit</option>
                   <option value="keluarga">Keluarga</option>
                   <option value="lainnya">Lainnya</option>
                 </select>
